@@ -1,4 +1,4 @@
-.PHONY: test lint format check
+.PHONY: test lint format check run
 test: check
 	uv run python -m pytest -s
 
@@ -10,3 +10,6 @@ format:
 
 check: format
 	uv run ruff check --fix src tests
+
+run:
+	uv run python -m pyproj.main

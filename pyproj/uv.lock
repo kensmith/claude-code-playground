@@ -456,6 +456,7 @@ dependencies = [
     { name = "asyncio" },
     { name = "pytest" },
     { name = "pytest-mock" },
+    { name = "requests" },
     { name = "yfinance" },
 ]
 
@@ -475,6 +476,7 @@ requires-dist = [
     { name = "asyncio", specifier = ">=3.4.3,<4.0.0" },
     { name = "pytest", specifier = ">=8.3.5,<9.0.0" },
     { name = "pytest-mock", specifier = ">=3.14.1,<4.0.0" },
+    { name = "requests", specifier = ">=2.32.3" },
     { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.11.12" },
     { name = "yfinance", specifier = ">=0.2.61,<0.3.0" },
 ]
