@@ -70,7 +70,7 @@ class TestGetGoldAndDxy:
 
         # Mock environment variable
         mock_getenv.return_value = "https://ntfy.sh/test-endpoint"
-        
+
         mocker.patch("pyproj.main.TickerService", return_value=mock_service)
 
         result = get_gold_and_dxy()
@@ -94,7 +94,9 @@ class TestGetGoldAndDxy:
 
     @patch("pyproj.main.requests.post")
     @patch("pyproj.main.os.getenv")
-    def test_get_gold_and_dxy_unavailable_data(self, mock_getenv, mock_post, mocker, capsys):
+    def test_get_gold_and_dxy_unavailable_data(
+        self, mock_getenv, mock_post, mocker, capsys
+    ):
         # Mock TickerService with None values
         mock_service = Mock()
         mock_service.get_multiple_tickers.return_value = {
@@ -124,7 +126,9 @@ class TestGetGoldAndDxy:
         mock_post.assert_called_once()
         args, kwargs = mock_post.call_args
         assert args[0] == "https://ntfy.sh/test-endpoint"
-        assert kwargs["data"] == "Gold Price: unavailable\nDXY Dollar Index: unavailable"
+        assert (
+            kwargs["data"] == "Gold Price: unavailable\nDXY Dollar Index: unavailable"
+        )
         assert kwargs["headers"]["Title"] == "Legacy Market Data"
 
         # Check console output
@@ -142,7 +146,7 @@ class TestGetGoldAndDxy:
 
         # Mock environment variable as None
         mock_getenv.return_value = None
-        
+
         mocker.patch("pyproj.main.TickerService", return_value=mock_service)
 
         result = get_gold_and_dxy()
@@ -185,7 +189,7 @@ class TestGetAllMarketData:
 
         # Mock environment variable
         mock_getenv.return_value = "https://ntfy.sh/test-endpoint"
-        
+
         mocker.patch("pyproj.main.TickerService", return_value=mock_service)
 
         result = get_all_market_data()
@@ -228,7 +232,7 @@ class TestGetAllMarketData:
 
         # Mock environment variable as None
         mock_getenv.return_value = None
-        
+
         mocker.patch("pyproj.main.TickerService", return_value=mock_service)
 
         result = get_all_market_data()

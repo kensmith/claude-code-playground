@@ -85,7 +85,7 @@ def get_all_market_data():
     if not ntfy_endpoint:
         print("Warning: NTFY_SH_ENDPOINT environment variable not set")
         return prices
-    
+
     try:
         response = requests.post(
             ntfy_endpoint,
@@ -125,7 +125,7 @@ def get_gold_and_dxy():
     if not ntfy_endpoint:
         print("Warning: NTFY_SH_ENDPOINT environment variable not set")
         return prices
-    
+
     try:
         response = requests.post(
             ntfy_endpoint,
