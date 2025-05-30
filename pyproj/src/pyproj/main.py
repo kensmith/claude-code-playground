@@ -1,5 +1,6 @@
 import yfinance as yf
 import requests
+import os
 from typing import Dict, Optional
 
 
@@ -80,9 +81,14 @@ def get_all_market_data():
 
     # Send notification to ntfy.sh
     message = "\n".join(message_lines)
+    ntfy_endpoint = os.getenv("NTFY_SH_ENDPOINT")
+    if not ntfy_endpoint:
+        print("Warning: NTFY_SH_ENDPOINT environment variable not set")
+        return prices
+
     try:
         response = requests.post(
-            "https://ntfy.sh/gtpbf-vdqho-kfsqdg",
+            ntfy_endpoint,
             data=message,
             headers={"Title": "Market Data Update"},
         )
@@ -115,9 +121,14 @@ def get_gold_and_dxy():
 
     # Send notification to ntfy.sh
     message = "\n".join(message_lines)
+    ntfy_endpoint = os.getenv("NTFY_SH_ENDPOINT")
+    if not ntfy_endpoint:
+        print("Warning: NTFY_SH_ENDPOINT environment variable not set")
+        return prices
+
     try:
         response = requests.post(
-            "https://ntfy.sh/gtpbf-vdqho-kfsqdg",
+            ntfy_endpoint,
             data=message,
             headers={"Title": "Legacy Market Data"},
         )

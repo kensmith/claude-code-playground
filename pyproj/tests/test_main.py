@@ -54,7 +54,8 @@ class TestTickerService:
 
 class TestGetGoldAndDxy:
     @patch("pyproj.main.requests.post")
-    def test_get_gold_and_dxy(self, mock_post, mocker, capsys):
+    @patch("pyproj.main.os.getenv")
+    def test_get_gold_and_dxy(self, mock_getenv, mock_post, mocker, capsys):
         # Mock TickerService
         mock_service = Mock()
         mock_service.get_multiple_tickers.return_value = {
@@ -67,6 +68,9 @@ class TestGetGoldAndDxy:
         mock_response.status_code = 200
         mock_post.return_value = mock_response
 
+        # Mock environment variable
+        mock_getenv.return_value = "https://ntfy.sh/test-endpoint"
+
         mocker.patch("pyproj.main.TickerService", return_value=mock_service)
 
         result = get_gold_and_dxy()
@@ -78,18 +82,21 @@ class TestGetGoldAndDxy:
         assert result == expected
 
         # Check that ntfy.sh was called
-        mock_post.assert_called_once_with(
-            "https://ntfy.sh/gtpbf-vdqho-kfsqdg",
-            data="Gold Price: $3313.40\nDXY Dollar Index: 99.4400",
-            headers={"Title": "Legacy Market Data"},
-        )
+        mock_post.assert_called_once()
+        args, kwargs = mock_post.call_args
+        assert args[0] == "https://ntfy.sh/test-endpoint"
+        assert kwargs["data"] == "Gold Price: $3313.40\nDXY Dollar Index: 99.4400"
+        assert kwargs["headers"]["Title"] == "Legacy Market Data"
 
         # Check console output
         captured = capsys.readouterr()
         assert "Legacy market data sent to ntfy.sh successfully" in captured.out
 
     @patch("pyproj.main.requests.post")
-    def test_get_gold_and_dxy_unavailable_data(self, mock_post, mocker, capsys):
+    @patch("pyproj.main.os.getenv")
+    def test_get_gold_and_dxy_unavailable_data(
+        self, mock_getenv, mock_post, mocker, capsys
+    ):
         # Mock TickerService with None values
         mock_service = Mock()
         mock_service.get_multiple_tickers.return_value = {
@@ -102,6 +109,9 @@ class TestGetGoldAndDxy:
         mock_response.status_code = 200
         mock_post.return_value = mock_response
 
+        # Mock environment variable
+        mock_getenv.return_value = "https://ntfy.sh/test-endpoint"
+
         mocker.patch("pyproj.main.TickerService", return_value=mock_service)
 
         result = get_gold_and_dxy()
@@ -109,6 +119,128 @@ class TestGetGoldAndDxy:
         expected = {
             "Gold Price": None,
             "DXY Dollar Index": None,
+        }
+        assert result == expected
+
+        # Check that ntfy.sh was called with unavailable data
+        mock_post.assert_called_once()
+        args, kwargs = mock_post.call_args
+        assert args[0] == "https://ntfy.sh/test-endpoint"
+        assert (
+            kwargs["data"] == "Gold Price: unavailable\nDXY Dollar Index: unavailable"
+        )
+        assert kwargs["headers"]["Title"] == "Legacy Market Data"
+
+        # Check console output
+        captured = capsys.readouterr()
+        assert "Legacy market data sent to ntfy.sh successfully" in captured.out
+
+    @patch("pyproj.main.os.getenv")
+    def test_get_gold_and_dxy_no_endpoint(self, mock_getenv, mocker, capsys):
+        # Mock TickerService
+        mock_service = Mock()
+        mock_service.get_multiple_tickers.return_value = {
+            "Gold Price": 3313.40,
+            "DXY Dollar Index": 99.44,
+        }
+
+        # Mock environment variable as None
+        mock_getenv.return_value = None
+
+        mocker.patch("pyproj.main.TickerService", return_value=mock_service)
+
+        result = get_gold_and_dxy()
+
+        expected = {
+            "Gold Price": 3313.40,
+            "DXY Dollar Index": 99.44,
+        }
+        assert result == expected
+
+        # Check console output
+        captured = capsys.readouterr()
+        assert "Warning: NTFY_SH_ENDPOINT environment variable not set" in captured.out
+
+
+class TestGetAllMarketData:
+    @patch("pyproj.main.requests.post")
+    @patch("pyproj.main.os.getenv")
+    def test_get_all_market_data(self, mock_getenv, mock_post, mocker, capsys):
+        # Mock TickerService
+        mock_service = Mock()
+        mock_service.get_multiple_tickers.return_value = {
+            "Gold Price": 3313.40,
+            "Oil Price (WTI)": 75.50,
+            "DXY Dollar Index": 99.44,
+            "USD/EUR": 1.0850,
+            "USD/JPY": 150.25,
+            "USD/CNH": 7.25,
+            "USD/TWD": 31.50,
+            "BTC/USD": 65000.00,
+            "VIX": 20.15,
+            "MOVE Index": 95.30,
+            "NASDAQ": 15500.75,
+        }
+
+        # Mock successful HTTP response
+        mock_response = Mock()
+        mock_response.status_code = 200
+        mock_post.return_value = mock_response
+
+        # Mock environment variable
+        mock_getenv.return_value = "https://ntfy.sh/test-endpoint"
+
+        mocker.patch("pyproj.main.TickerService", return_value=mock_service)
+
+        result = get_all_market_data()
+
+        expected = {
+            "Gold Price": 3313.40,
+            "Oil Price (WTI)": 75.50,
+            "DXY Dollar Index": 99.44,
+            "USD/EUR": 1.0850,
+            "USD/JPY": 150.25,
+            "USD/CNH": 7.25,
+            "USD/TWD": 31.50,
+            "BTC/USD": 65000.00,
+            "VIX": 20.15,
+            "MOVE Index": 95.30,
+            "NASDAQ": 15500.75,
+        }
+        assert result == expected
+
+        # Check that ntfy.sh was called
+        mock_post.assert_called_once()
+        args, kwargs = mock_post.call_args
+        assert args[0] == "https://ntfy.sh/test-endpoint"
+        assert kwargs["headers"]["Title"] == "Market Data Update"
+        assert "Gold Price: $3313.40" in kwargs["data"]
+        assert "BTC/USD: $65,000.00" in kwargs["data"]
+
+        # Check console output
+        captured = capsys.readouterr()
+        assert "Market data sent to ntfy.sh successfully" in captured.out
+
+    @patch("pyproj.main.os.getenv")
+    def test_get_all_market_data_no_endpoint(self, mock_getenv, mocker, capsys):
+        # Mock TickerService
+        mock_service = Mock()
+        mock_service.get_multiple_tickers.return_value = {
+            "Gold Price": 3313.40,
+            "Oil Price (WTI)": 75.50,
+        }
+
+        # Mock environment variable as None
+        mock_getenv.return_value = None
+
+        mocker.patch("pyproj.main.TickerService", return_value=mock_service)
+
+        result = get_all_market_data()
+
+        expected = {
+            "Gold Price": 3313.40,
+            "Oil Price (WTI)": 75.50,
+
         }
         assert result == expected
 
@@ -177,4 +309,4 @@ class TestGetAllMarketData:
 
         # Check console output
         captured = capsys.readouterr()
-        assert "Market data sent to ntfy.sh successfully" in captured.out
+        assert "Warning: NTFY_SH_ENDPOINT environment variable not set" in captured.out
