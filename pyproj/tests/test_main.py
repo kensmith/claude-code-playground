@@ -228,6 +228,15 @@ class TestGetAllMarketData:
         mock_service.get_multiple_tickers.return_value = {
             "Gold Price": 3313.40,
             "Oil Price (WTI)": 75.50,
+            "DXY Dollar Index": 99.44,
+            "USD/EUR": 1.0850,
+            "USD/JPY": 150.25,
+            "USD/CNH": 7.25,
+            "USD/TWD": 31.50,
+            "BTC/USD": 65000.00,
+            "VIX": 20.15,
+            "MOVE Index": 95.30,
+            "NASDAQ": 15500.75,
         }
 
         # Mock environment variable as None
@@ -240,53 +249,6 @@ class TestGetAllMarketData:
         expected = {
             "Gold Price": 3313.40,
             "Oil Price (WTI)": 75.50,
-
-        }
-        assert result == expected
-
-        # Check that ntfy.sh was called with unavailable data
-        mock_post.assert_called_once_with(
-            "https://ntfy.sh/gtpbf-vdqho-kfsqdg",
-            data="Gold Price: unavailable\nDXY Dollar Index: unavailable",
-            headers={"Title": "Legacy Market Data"},
-        )
-
-        # Check console output
-        captured = capsys.readouterr()
-        assert "Legacy market data sent to ntfy.sh successfully" in captured.out
-
-
-class TestGetAllMarketData:
-    @patch("pyproj.main.requests.post")
-    def test_get_all_market_data(self, mock_post, mocker, capsys):
-        # Mock TickerService
-        mock_service = Mock()
-        mock_service.get_multiple_tickers.return_value = {
-            "Gold Price": 3313.40,
-            "Oil Price (WTI)": 75.50,
-            "DXY Dollar Index": 99.44,
-            "USD/EUR": 1.0850,
-            "USD/JPY": 150.25,
-            "USD/CNH": 7.25,
-            "USD/TWD": 31.50,
-            "BTC/USD": 65000.00,
-            "VIX": 20.15,
-            "MOVE Index": 95.30,
-            "NASDAQ": 15500.75,
-        }
-
-        # Mock successful HTTP response
-        mock_response = Mock()
-        mock_response.status_code = 200
-        mock_post.return_value = mock_response
-
-        mocker.patch("pyproj.main.TickerService", return_value=mock_service)
-
-        result = get_all_market_data()
-
-        expected = {
-            "Gold Price": 3313.40,
-            "Oil Price (WTI)": 75.50,
             "DXY Dollar Index": 99.44,
             "USD/EUR": 1.0850,
             "USD/JPY": 150.25,
@@ -298,14 +260,6 @@ class TestGetAllMarketData:
             "NASDAQ": 15500.75,
         }
         assert result == expected
-
-        # Check that ntfy.sh was called
-        mock_post.assert_called_once()
-        args, kwargs = mock_post.call_args
-        assert args[0] == "https://ntfy.sh/gtpbf-vdqho-kfsqdg"
-        assert kwargs["headers"]["Title"] == "Market Data Update"
-        assert "Gold Price: $3313.40" in kwargs["data"]
-        assert "BTC/USD: $65,000.00" in kwargs["data"]
 
         # Check console output
         captured = capsys.readouterr()
